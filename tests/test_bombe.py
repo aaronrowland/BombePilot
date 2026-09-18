@@ -34,6 +34,11 @@ class BombeTests(unittest.TestCase):
         self.assertEqual(stop.plugboard, "AV BS")
         self.assertEqual(stop.surviving_tests, 1)
 
+    def test_job_exposes_all_rotor_orders(self) -> None:
+        job = BombeJob(ciphertext="XYZXYZXY", crib="ABC")
+        self.assertEqual(len(job.rotor_orders), 60)
+        self.assertIn(("IV", "V", "I"), job.rotor_orders)
+
     def test_search_limit_is_observable(self) -> None:
         job = BombeJob(ciphertext="XYZXYZXY", crib="ABC")
         result = BombeSolver(position_limit=4).solve(job)

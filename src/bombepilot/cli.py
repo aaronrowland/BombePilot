@@ -21,6 +21,7 @@ def main() -> None:
         "positions_tested": result.positions_tested,
         "stops": [
             {
+                "rotor_order": stop.rotor_order,
                 "positions": stop.positions,
                 "test_letter": stop.test_letter,
                 "plugboard": stop.plugboard,

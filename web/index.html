@@ -59,9 +59,9 @@
           <p class="label">BOMBE RUN CONTROL</p>
           <div class="controls">
             <button id="quick-run" class="button primary">2. Run Bombe on this message</button>
-            <button id="full-run" class="button secondary">Run full 17,576-position sweep</button>
+            <button id="full-run" class="button secondary">Run full rotor-order sweep</button>
           </div>
-          <p class="explain bombe-scope">The Bombe searches rotor positions and stecker hypotheses for the rotor order selected above.</p>
+          <p class="explain bombe-scope">The Bombe searches all 60 possible three-rotor orders, 17,576 starting positions per order, and stecker hypotheses.</p>
         </div>
         <div class="status-block">
           <span class="status-dot" id="status-dot"></span>
@@ -103,13 +103,14 @@
             <p class="label">BOMBE RUN</p>
             <h2>Rotor bank scanning</h2>
           </div>
-          <div class="scan-count"><strong id="positions-tested">0</strong><span>/ 17,576 positions</span></div>
+            <div class="scan-count"><strong id="positions-tested">0</strong><span>positions across rotor orders</span></div>
         </div>
         <div class="rotor-bank">
           <div class="rotor"><span class="rotor-name">LEFT</span><strong id="rotor-left">A</strong><small>slow drum</small></div>
           <div class="rotor"><span class="rotor-name">MIDDLE</span><strong id="rotor-middle">A</strong><small>middle drum</small></div>
           <div class="rotor rotor-hot"><span class="rotor-name">RIGHT</span><strong id="rotor-right">A</strong><small>fast drum</small></div>
         </div>
+        <div class="scan-meta"><span>Rotor order under test: <strong id="rotor-order-current">—</strong></span></div>
         <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
         <div class="scan-meta">
           <span>Hypotheses tested: <strong id="hypotheses-tested">0</strong></span>
@@ -150,8 +151,8 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Rotor position</th><th>Test stecker</th><th>Inferred pairs</th><th>Survivors</th></tr></thead>
-              <tbody id="stops"><tr><td colspan="4" class="empty">No stops yet.</td></tr></tbody>
+              <thead><tr><th>Rotor order</th><th>Rotor position</th><th>Test stecker</th><th>Inferred pairs</th><th>Survivors</th></tr></thead>
+              <tbody id="stops"><tr><td colspan="5" class="empty">No stops yet.</td></tr></tbody>
             </table>
           </div>
           <p class="explain">A stop is not automatically the answer. It is passed to a checking machine, where the partial stecker is validated against the full message.</p>

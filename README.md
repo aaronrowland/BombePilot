@@ -34,8 +34,10 @@ menu, scrambler, diagonal-board, and stop logic in the browser, so it can be
 served directly by Cloudflare Pages without a Python runtime.
 
 For a local preview, serve the repository root with any static file server and
-open `web/index.html`. The hosted version provides a quick 4,096-position
-demonstration and an optional full 17,576-position sweep.
+open `web/index.html`. The hosted version provides a quick 4,096-position-per-
+order demonstration and an optional full 17,576-position-per-order sweep
+across all 60 ordered three-rotor arrangements. The checking phase can stop the
+demonstration as soon as it verifies a complete setting.
 
 When a valid stop is found, the visualiser also runs the checking-machine
 phase and displays the recovered plaintext when the selected crib validates a
@@ -59,11 +61,12 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 The implementation follows the Bombe abstraction rather than brute-forcing
 plugboard configurations. A crib creates a menu of plaintext/ciphertext
-relationships. For each rotor position, the solver tests a hypothesised
-stecker for one menu letter, propagates consequences through the plugboard-free
-scrambler permutations, and enforces the reciprocal plugboard constraint—the
-software equivalent of the diagonal board. Rotor positions with surviving
-hypotheses are emitted as stops for later checking.
+relationships. For each candidate rotor order and rotor position, the solver
+tests a hypothesised stecker for one menu letter, propagates consequences
+through the plugboard-free scrambler permutations, and enforces the reciprocal
+plugboard constraint—the software equivalent of the diagonal board. Rotor
+orders and positions with surviving hypotheses are emitted as stops for later
+checking.
 
 The detailed algorithm is documented in [docs/algorithm.md](docs/algorithm.md).
 

@@ -24,11 +24,12 @@ function setStatus(text, kind = "ready") {
   $("status-dot").className = `status-dot ${kind}`;
 }
 
-function renderRotors(positions) {
+function renderRotors(positions, rotorOrder) {
   if (!positions || positions.length !== 3) return;
   $("rotor-left").textContent = positions[0];
   $("rotor-middle").textContent = positions[1];
   $("rotor-right").textContent = positions[2];
+  if (rotorOrder) $("rotor-order-current").textContent = rotorOrder;
 }
 
 function renderRelays(event) {
@@ -49,23 +50,29 @@ function addEvent(event) {
   line.className = `log-line ${event.event === "stop" ? "stop-line" : ""}`;
   if (event.event === "progress") {
     line.innerHTML = `<span>SCAN</span> ${event.positions} · ${event.positions_tested.toLocaleString()} positions · ${event.hypotheses_tested.toLocaleString()} hypotheses`;
-    renderRotors(event.positions);
+    renderRotors(event.positions, event.rotor_order);
     $("positions-tested").textContent = event.positions_tested.toLocaleString();
     $("hypotheses-tested").textContent = event.hypotheses_tested.toLocaleString();
     $("latest-test").textContent = event.positions;
     $("relay-state").textContent = `${event.surviving_tests} surviving`;
-    $("progress-bar").style.width = `${(event.positions_tested / 17576) * 100}%`;
+    $("progress-bar").style.width = `${((event.position_index || 0) / (event.positions_per_order || 17576)) * 100}%`;
     renderRelays(event);
   } else if (event.event === "stop") {
     line.innerHTML = `<span>STOP</span> ${event.positions} · test ${event.test_letter} · ${event.surviving_tests} survivor${event.surviving_tests === 1 ? "" : "s"}`;
-    renderRotors(event.positions);
-    $("latest-test").textContent = `${event.positions} / ${event.test_letter}`;
+    renderRotors(event.positions, event.rotor_order);
+    $("latest-test").textContent = `${event.rotor_order} / ${event.positions} / ${event.test_letter}`;
     $("relay-state").textContent = `${event.surviving_tests} surviving`;
     renderRelays(event);
+  } else if (event.event === "rotor_order_started") {
+    line.innerHTML = `<span>ORDER</span> ${event.rotor_order} · ${event.rotor_order_index}/${event.rotor_orders}`;
+    $("rotor-order-current").textContent = event.rotor_order;
+  } else if (event.event === "verified") {
+    line.innerHTML = `<span>CHECK</span> verified ${event.rotor_order} at ${event.positions} · ${event.plugboard || "no inferred pairs"}`;
+    $("rotor-order-current").textContent = event.rotor_order;
   } else if (event.event === "search_started") {
-    line.innerHTML = `<span>INIT</span> root ${event.root} · ${event.edges} menu edges · ${event.vertices} letters`;
+    line.innerHTML = `<span>INIT</span> root ${event.root} · ${event.rotor_orders} rotor orders · ${event.edges} menu edges`;
   } else if (event.event === "search_finished") {
-    line.innerHTML = `<span>DONE</span> ${event.positions_tested.toLocaleString()} positions · ${event.stops} stops`;
+    line.innerHTML = `<span>DONE</span> ${event.rotor_orders_tested} rotor order${event.rotor_orders_tested === 1 ? "" : "s"} · ${event.positions_tested.toLocaleString()} positions · ${event.stops} stops`;
   }
   log.appendChild(line);
   log.scrollTop = log.scrollHeight;
@@ -75,10 +82,10 @@ function renderResult(result) {
   $("positions-tested").textContent = result.positionsTested.toLocaleString();
   $("hypotheses-tested").textContent = result.hypothesesTested.toLocaleString();
   $("stop-count").textContent = result.stops.length.toLocaleString();
-  $("progress-bar").style.width = `${(result.positionsTested / 17576) * 100}%`;
+  $("progress-bar").style.width = result.verifiedStop ? "100%" : "0%";
   $("stops").innerHTML = result.stops.slice(0, 40).map((stop) =>
-    `<tr><td><code>${stop.positions}</code></td><td><code>${stop.testLetter}</code></td><td><code>${stop.plugboard || "—"}</code></td><td>${stop.survivingTests}</td></tr>`
-  ).join("") || `<tr><td colspan="4" class="empty">No stops recorded.</td></tr>`;
+    `<tr><td><code>${stop.rotorNames.join(" ")}</code></td><td><code>${stop.positions}</code></td><td><code>${stop.testLetter}</code></td><td><code>${stop.plugboard || "—"}</code></td><td>${stop.survivingTests}</td></tr>`
+  ).join("") || `<tr><td colspan="5" class="empty">No stops recorded.</td></tr>`;
 
   $("checker-panel").hidden = true;
   const verified = result.stops.find((stop) => {
@@ -86,10 +93,11 @@ function renderResult(result) {
       const decoded = new EnigmaMachine(
         stop.positions,
         stop.plugboard,
-        state.job.rotorNames || ["I", "II", "III"],
+        stop.rotorNames,
         state.job.reflector || "B",
       ).encrypt(state.job.ciphertext);
-      return decoded.slice(0, state.job.crib.length) === state.job.crib;
+      const offset = state.job.cribOffset || 0;
+      return decoded.slice(offset, offset + state.job.crib.length) === state.job.crib;
     } catch (_) {
       return false;
     }
@@ -98,14 +106,14 @@ function renderResult(result) {
     const plaintext = new EnigmaMachine(
       verified.positions,
       verified.plugboard,
-      state.job.rotorNames || ["I", "II", "III"],
+      verified.rotorNames,
       state.job.reflector || "B",
     ).encrypt(state.job.ciphertext);
     $("checker-panel").hidden = false;
     $("checker-chip").textContent = "STOP VERIFIED";
     $("checker-chip").className = "chip chip-success";
     $("checker-explanation").textContent = "The checking machine found a candidate that reproduces the crib. This is the Bombe’s solved setting for the evidence supplied.";
-    $("recovered-setting").textContent = `${verified.positions} · ${verified.plugboard}`;
+    $("recovered-setting").textContent = `${verified.rotorNames.join(" ")} · ${verified.positions} · ${verified.plugboard || "no inferred pairs"}`;
     $("decoded-message").textContent = plaintext;
     $("decoded-reading").textContent = "The checking machine found a setting consistent with the crib.";
     return true;
@@ -131,7 +139,7 @@ async function run(mode) {
   state.running = true;
   state.seen.clear();
   $("event-log").innerHTML = "";
-  $("stops").innerHTML = `<tr><td colspan="4" class="empty">Scanning…</td></tr>`;
+  $("stops").innerHTML = `<tr><td colspan="5" class="empty">Scanning…</td></tr>`;
   $("checker-panel").hidden = true;
   $("stop-count").textContent = "0";
   $("positions-tested").textContent = "0";
@@ -139,11 +147,11 @@ async function run(mode) {
   $("progress-bar").style.width = "0%";
   $("quick-run").disabled = true;
   $("full-run").disabled = true;
-  $("run-mode").textContent = mode === "quick" ? "· 4,096-position training run" : "· full run";
+  $("run-mode").textContent = mode === "quick" ? "· 4,096 positions per rotor order" : "· 17,576 positions per rotor order";
   setStatus("Running", "running");
   const limit = mode === "quick" ? 4096 : 17576;
   try {
-    const result = await runBombe(state.job, limit, addEvent);
+    const result = await runBombe(state.job, limit, addEvent, true);
     const verified = renderResult(result);
     setStatus(
       verified ? `Verified setting found · ${result.elapsedSeconds.toFixed(2)}s` : `${result.stops.length} candidate stop${result.stops.length === 1 ? "" : "s"}; not verified`,

@@ -11,12 +11,12 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field
-from itertools import product
+from itertools import permutations, product
 import time
 from typing import Callable, Iterator
 from uuid import uuid4
 
-from .enigma import ALPHABET, EnigmaMachine, clean_text
+from .enigma import ALPHABET, ROTOR_SPECS, EnigmaMachine, clean_text
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,8 @@ class BombeJob:
     rotors: tuple[str, str, str] = ("I", "II", "III")
     reflector: str = "B"
     ring_settings: str = "AAA"
+    rotor_pool: tuple[str, ...] = tuple(ROTOR_SPECS)
+    candidate_orders: tuple[tuple[str, str, str], ...] | None = None
 
     def __post_init__(self) -> None:
         ciphertext = clean_text(self.ciphertext)
@@ -35,8 +37,24 @@ class BombeJob:
             raise ValueError("crib must not be empty")
         if self.crib_offset < 0 or self.crib_offset + len(crib) > len(ciphertext):
             raise ValueError("crib must fit within ciphertext at crib_offset")
+        if len(self.rotors) != 3 or len(set(self.rotors)) != 3 or any(rotor not in ROTOR_SPECS for rotor in self.rotors):
+            raise ValueError("rotors must contain three distinct known rotor names")
+        if len(self.rotor_pool) < 3 or len(set(self.rotor_pool)) != len(self.rotor_pool) or any(rotor not in ROTOR_SPECS for rotor in self.rotor_pool):
+            raise ValueError("rotor_pool must contain distinct known rotor names")
+        if self.candidate_orders is not None:
+            if not self.candidate_orders:
+                raise ValueError("candidate_orders must not be empty")
+            for order in self.candidate_orders:
+                if len(order) != 3 or len(set(order)) != 3 or any(rotor not in ROTOR_SPECS for rotor in order):
+                    raise ValueError("candidate_orders must contain three distinct known rotor names")
         object.__setattr__(self, "ciphertext", ciphertext)
         object.__setattr__(self, "crib", crib)
+
+    @property
+    def rotor_orders(self) -> tuple[tuple[str, str, str], ...]:
+        """All candidate three-rotor orders from the available rotor pool."""
+
+        return self.candidate_orders or tuple(permutations(self.rotor_pool, 3))
 
 
 @dataclass(frozen=True)
@@ -64,6 +82,7 @@ class Candidate:
     test_letter: str
     steckers: tuple[tuple[str, str], ...]
     surviving_tests: int
+    rotor_order: tuple[str, str, str] = ("I", "II", "III")
 
     @property
     def plugboard(self) -> str:
@@ -132,11 +151,16 @@ def build_menu(job: BombeJob) -> Menu:
     return Menu(edges=connected_edges, root=root)
 
 
-def _scrambler_table(job: BombeJob, positions: str, offsets: set[int]) -> dict[int, tuple[str, ...]]:
+def _scrambler_table(
+    job: BombeJob,
+    positions: str,
+    offsets: set[int],
+    rotor_order: tuple[str, str, str],
+) -> dict[int, tuple[str, ...]]:
     """Return S_i, the plugboard-free Enigma permutation for each menu edge."""
 
     machine = EnigmaMachine(
-        rotors=job.rotors,
+        rotors=rotor_order,
         reflector=job.reflector,
         positions=positions,
         ring_settings=job.ring_settings,
@@ -228,42 +252,64 @@ class BombeSolver:
             if on_event:
                 on_event(record)
 
-        emit("search_started", root=menu.root, edges=len(menu.edges), vertices=len(menu.vertices))
-        for positions in self.iter_positions():
-            if result.positions_tested >= self.position_limit:
-                emit("search_limit_reached", limit=self.position_limit)
-                break
-            result.positions_tested += 1
-            scramblers = _scrambler_table(job, positions, offsets)
-            surviving: list[tuple[str, dict[str, str]]] = []
-            for test_letter in ALPHABET:
-                result.hypotheses_tested += 1
-                try:
-                    mapping = _propagate(menu, scramblers, test_letter)
-                except _Contradiction:
-                    continue
-                surviving.append((test_letter, mapping))
+        rotor_orders = job.rotor_orders
+        emit(
+            "search_started",
+            root=menu.root,
+            edges=len(menu.edges),
+            vertices=len(menu.vertices),
+            rotor_orders=len(rotor_orders),
+            positions_per_order=26**3,
+        )
+        limit_reached = False
+        for rotor_order in rotor_orders:
+            emit("rotor_order_started", rotor_order=" ".join(rotor_order))
+            for positions in self.iter_positions():
+                if result.positions_tested >= self.position_limit:
+                    emit("search_limit_reached", limit=self.position_limit)
+                    limit_reached = True
+                    break
+                result.positions_tested += 1
+                scramblers = _scrambler_table(job, positions, offsets, rotor_order)
+                surviving: list[tuple[str, dict[str, str]]] = []
+                for test_letter in ALPHABET:
+                    result.hypotheses_tested += 1
+                    try:
+                        mapping = _propagate(menu, scramblers, test_letter)
+                    except _Contradiction:
+                        continue
+                    surviving.append((test_letter, mapping))
 
-            # Software analogue of a Bombe stop: fewer than all 26 test
-            # hypotheses survive the diagonal-board contradiction test.
-            if surviving and len(surviving) < 26:
-                for test_letter, mapping in surviving:
-                    stop = Candidate(positions, test_letter, _stecker_pairs(mapping), len(surviving))
-                    result.stops.append(stop)
+                # Software analogue of a Bombe stop: fewer than all 26 test
+                # hypotheses survive the diagonal-board contradiction test.
+                if surviving and len(surviving) < 26:
+                    for test_letter, mapping in surviving:
+                        stop = Candidate(
+                            positions,
+                            test_letter,
+                            _stecker_pairs(mapping),
+                            len(surviving),
+                            rotor_order,
+                        )
+                        result.stops.append(stop)
+                        emit(
+                            "stop",
+                            rotor_order=" ".join(rotor_order),
+                            positions=positions,
+                            test_letter=test_letter,
+                            surviving_tests=len(surviving),
+                        )
+                if result.positions_tested % 128 == 0:
                     emit(
-                        "stop",
+                        "progress",
+                        rotor_order=" ".join(rotor_order),
                         positions=positions,
-                        test_letter=test_letter,
+                        positions_tested=result.positions_tested,
+                        hypotheses_tested=result.hypotheses_tested,
                         surviving_tests=len(surviving),
                     )
-            if result.positions_tested % 128 == 0:
-                emit(
-                    "progress",
-                    positions=positions,
-                    positions_tested=result.positions_tested,
-                    hypotheses_tested=result.hypotheses_tested,
-                    surviving_tests=len(surviving),
-                )
+            if limit_reached:
+                break
         result.elapsed_seconds = time.perf_counter() - started
         emit(
             "search_finished",

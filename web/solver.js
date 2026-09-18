@@ -13,6 +13,7 @@ const REFLECTORS = {
   B: "YRUHQSLDPXNGOKMIEBFZCWVJAT",
   C: "FVPJIAOYEDRZXWGCTKUQSBNMHL",
 };
+const ROTOR_POOL = ["I", "II", "III", "IV", "V"];
 const indexOf = (letter) => letter.charCodeAt(0) - 65;
 
 function plugboard(pairs) {
@@ -111,11 +112,24 @@ function buildMenu(job) {
   };
 }
 
-function scramblerTable(job, positions, offsets) {
+function rotorOrders(job) {
+  if (job.rotorOrders) return job.rotorOrders;
+  const orders = [];
+  for (const left of ROTOR_POOL) {
+    for (const middle of ROTOR_POOL) {
+      for (const right of ROTOR_POOL) {
+        if (new Set([left, middle, right]).size === 3) orders.push([left, middle, right]);
+      }
+    }
+  }
+  return orders;
+}
+
+function scramblerTable(job, positions, offsets, rotorOrder) {
   const machine = new EnigmaMachine(
     positions,
     "",
-    job.rotorNames || ["I", "II", "III"],
+    rotorOrder,
     job.reflector || "B",
   );
   const table = {};
@@ -161,45 +175,113 @@ function positionAt(number) {
     + ALPHABET[number % 26];
 }
 
-async function runBombe(job, limit, onEvent) {
+function stopMatchesCrib(job, stop) {
+  const offset = job.cribOffset || 0;
+  const decoded = new EnigmaMachine(
+    stop.positions,
+    stop.plugboard,
+    stop.rotorNames,
+    job.reflector || "B",
+  ).encrypt(job.ciphertext);
+  return decoded.slice(offset, offset + job.crib.length) === job.crib;
+}
+
+async function runBombe(job, limit, onEvent, stopOnVerified = false) {
   const menu = buildMenu(job);
-  const result = { positionsTested: 0, hypothesesTested: 0, stops: [], elapsedSeconds: 0 };
+  const orders = rotorOrders(job);
+  const result = {
+    positionsTested: 0,
+    hypothesesTested: 0,
+    rotorOrdersTested: 0,
+    positionsPerOrder: limit,
+    stops: [],
+    elapsedSeconds: 0,
+    verifiedStop: null,
+  };
   const offsets = new Set(menu.edges.map((edge) => edge.offset));
   const started = performance.now();
-  onEvent({ event: "search_started", root: menu.root, edges: menu.edges.length, vertices: menu.vertices.size });
+  onEvent({
+    event: "search_started",
+    root: menu.root,
+    edges: menu.edges.length,
+    vertices: menu.vertices.size,
+    rotor_orders: orders.length,
+    positions_per_order: limit,
+  });
 
-  let number = 0;
-  while (number < limit) {
-    const chunkEnd = Math.min(number + 48, limit);
-    while (number < chunkEnd) {
-      const positions = positionAt(number++);
-      result.positionsTested += 1;
-      const scramblers = scramblerTable(job, positions, offsets);
-      const surviving = [];
-      for (const testLetter of ALPHABET) {
-        result.hypothesesTested += 1;
-        try { surviving.push({ testLetter, mapping: propagate(menu, scramblers, testLetter) }); }
-        catch (_) { /* relay contradiction: this hypothesis is rejected */ }
-      }
-      if (surviving.length > 0 && surviving.length < 26) {
-        for (const survivor of surviving) {
-          const stop = {
+  outer: for (let orderIndex = 0; orderIndex < orders.length; orderIndex += 1) {
+    const rotorOrder = orders[orderIndex];
+    result.rotorOrdersTested += 1;
+    onEvent({
+      event: "rotor_order_started",
+      rotor_order: rotorOrder.join(" "),
+      rotor_order_index: orderIndex + 1,
+      rotor_orders: orders.length,
+    });
+    let number = 0;
+    while (number < limit) {
+      const chunkEnd = Math.min(number + 48, limit);
+      while (number < chunkEnd) {
+        const positions = positionAt(number++);
+        result.positionsTested += 1;
+        const scramblers = scramblerTable(job, positions, offsets, rotorOrder);
+        const surviving = [];
+        for (const testLetter of ALPHABET) {
+          result.hypothesesTested += 1;
+          try { surviving.push({ testLetter, mapping: propagate(menu, scramblers, testLetter) }); }
+          catch (_) { /* relay contradiction: this hypothesis is rejected */ }
+        }
+        if (surviving.length > 0 && surviving.length < 26) {
+          for (const survivor of surviving) {
+            const stop = {
+              rotorNames: rotorOrder,
+              positions,
+              testLetter: survivor.testLetter,
+              plugboard: steckerPairs(survivor.mapping),
+              survivingTests: surviving.length,
+            };
+            result.stops.push(stop);
+            onEvent({
+              event: "stop",
+              rotor_order: rotorOrder.join(" "),
             positions,
-            testLetter: survivor.testLetter,
-            plugboard: steckerPairs(survivor.mapping),
-            survivingTests: surviving.length,
-          };
-          result.stops.push(stop);
-          onEvent({ event: "stop", positions, test_letter: survivor.testLetter, surviving_tests: surviving.length, plugboard: stop.plugboard });
+            position_index: number,
+            positions_per_order: limit,
+            test_letter: survivor.testLetter,
+              surviving_tests: surviving.length,
+              plugboard: stop.plugboard,
+            });
+            if (stopOnVerified && stopMatchesCrib(job, stop)) {
+              result.verifiedStop = stop;
+              onEvent({ event: "verified", rotor_order: rotorOrder.join(" "), positions, plugboard: stop.plugboard });
+              break outer;
+            }
+          }
+        }
+        if (result.positionsTested % 128 === 0) {
+          onEvent({
+            event: "progress",
+            rotor_order: rotorOrder.join(" "),
+            rotor_order_index: orderIndex + 1,
+            positions,
+            position_index: number,
+            positions_tested: result.positionsTested,
+            hypotheses_tested: result.hypothesesTested,
+            surviving_tests: surviving.length,
+          });
         }
       }
-      if (result.positionsTested % 128 === 0) {
-        onEvent({ event: "progress", positions, positions_tested: result.positionsTested, hypotheses_tested: result.hypothesesTested, surviving_tests: surviving.length });
-      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    await new Promise((resolve) => setTimeout(resolve, 0));
   }
   result.elapsedSeconds = (performance.now() - started) / 1000;
-  onEvent({ event: "search_finished", positions_tested: result.positionsTested, hypotheses_tested: result.hypothesesTested, stops: result.stops.length, elapsed_seconds: result.elapsedSeconds });
+  onEvent({
+    event: "search_finished",
+    positions_tested: result.positionsTested,
+    hypotheses_tested: result.hypothesesTested,
+    rotor_orders_tested: result.rotorOrdersTested,
+    stops: result.stops.length,
+    elapsed_seconds: result.elapsedSeconds,
+  });
   return result;
 }

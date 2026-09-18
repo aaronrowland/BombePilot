@@ -25,8 +25,10 @@ edge from plaintext `p` to ciphertext `c`:
 P(c) = S_i(P(p))
 ```
 
-For each rotor position, the solver tests all 26 possible values for `P(root)`.
-It propagates the consequences through the menu in both directions.
+For each candidate rotor order and rotor position, the solver tests all 26
+possible values for `P(root)`. The default five-rotor pool produces 60 ordered
+three-rotor arrangements. It propagates the consequences through the menu in
+both directions.
 
 ## 3. Diagonal-board constraint
 
@@ -43,12 +45,13 @@ cross-connections.
 
 ## 4. Stops
 
-The physical Bombe scanned the 17,576 rotor positions and used relay state to
-identify a stop. Here, a rotor position is reported as a stop when fewer than
-all 26 test-letter hypotheses survive contradiction propagation. A stop gives
-the rotor position, a test letter, and partial stecker information. It must be
-checked against the full message, just as Bombe operators checked stops on a
-separate checking machine.
+The physical Bombe scanned the 17,576 rotor positions for each candidate wheel
+order and used relay state to identify a stop. Here, a rotor position is
+reported as a stop when fewer than all 26 test-letter hypotheses survive
+contradiction propagation. A stop gives the rotor order, rotor position, a
+test letter, and partial stecker information. It must be checked against the
+full message, just as Bombe operators checked stops on a separate checking
+machine.
 
 The diagonal-board idea was Gordon Welchman's major enhancement to Turing's
 original Bombe design; this project names the implementation explicitly so
