@@ -112,7 +112,12 @@ function buildMenu(job) {
 }
 
 function scramblerTable(job, positions, offsets) {
-  const machine = new EnigmaMachine(positions);
+  const machine = new EnigmaMachine(
+    positions,
+    "",
+    job.rotorNames || ["I", "II", "III"],
+    job.reflector || "B",
+  );
   const table = {};
   const maxOffset = Math.max(...offsets);
   for (let offset = 0; offset <= maxOffset; offset += 1) {

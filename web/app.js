@@ -1,18 +1,21 @@
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const state = { seen: new Set(), running: false };
+const state = { seen: new Set(), running: false, job: null };
 const fixture = {
   // Generated with rotor order I-II-III, starting position AAA, and hidden
   // steckers AV BS. The browser receives only ciphertext and crib.
   ciphertext: "KLHFRTCQDNNLVPRNUZTCSANZZGCVHYEUOQCVS",
   crib: "WETTERVORHERSAGEBEGINNZEHNUHRNULLNULL",
   cribOffset: 0,
+  rotorNames: ["I", "II", "III"],
+  reflector: "B",
 };
+state.job = { ...fixture };
 const $ = (id) => document.getElementById(id);
 
 function renderFixture() {
-  const menu = buildMenu(fixture);
-  $("ciphertext").textContent = fixture.ciphertext;
-  $("crib").textContent = fixture.crib;
+  const menu = buildMenu(state.job);
+  $("ciphertext").textContent = state.job.ciphertext;
+  $("crib").textContent = state.job.crib;
   $("menu-root").textContent = menu.root;
   $("menu-edges").innerHTML = menu.edges.slice(0, 18).map((edge) =>
     `<span class="edge"><b>${edge.plaintext}</b><i>→</i><b>${edge.ciphertext}</b><small>@${edge.offset}</small></span>`
@@ -82,13 +85,33 @@ function renderResult(result) {
 
   // The fixture's first stop is deliberately a valid checking-machine
   // result: the Bombe recovered AAA and the partial stecker AV BS.
-  const verified = result.stops.find((stop) => stop.positions === "AAA" && stop.plugboard === "AV BS");
+  $("checker-panel").hidden = true;
+  const verified = result.stops.find((stop) => {
+    try {
+      const decoded = new EnigmaMachine(
+        stop.positions,
+        stop.plugboard,
+        state.job.rotorNames || ["I", "II", "III"],
+        state.job.reflector || "B",
+      ).encrypt(state.job.ciphertext);
+      return decoded.slice(0, state.job.crib.length) === state.job.crib;
+    } catch (_) {
+      return false;
+    }
+  });
   if (verified) {
-    const plaintext = new EnigmaMachine(verified.positions, verified.plugboard).encrypt(fixture.ciphertext);
+    const plaintext = new EnigmaMachine(
+      verified.positions,
+      verified.plugboard,
+      state.job.rotorNames || ["I", "II", "III"],
+      state.job.reflector || "B",
+    ).encrypt(state.job.ciphertext);
     $("checker-panel").hidden = false;
     $("recovered-setting").textContent = `${verified.positions} · ${verified.plugboard}`;
     $("decoded-message").textContent = plaintext;
-    $("decoded-reading").textContent = "Weather forecast — beginning ten o'clock, zero zero.";
+    $("decoded-reading").textContent = state.job === fixture
+      ? "Weather forecast — beginning ten o'clock, zero zero."
+      : "The checking machine found a setting consistent with the crib.";
   }
 }
 
@@ -98,6 +121,7 @@ async function run(mode) {
   state.seen.clear();
   $("event-log").innerHTML = "";
   $("stops").innerHTML = `<tr><td colspan="4" class="empty">Scanning…</td></tr>`;
+  $("checker-panel").hidden = true;
   $("stop-count").textContent = "0";
   $("positions-tested").textContent = "0";
   $("hypotheses-tested").textContent = "0";
@@ -108,7 +132,7 @@ async function run(mode) {
   setStatus("Running", "running");
   const limit = mode === "quick" ? 4096 : 17576;
   try {
-    const result = await runBombe(fixture, limit, addEvent);
+    const result = await runBombe(state.job, limit, addEvent);
     renderResult(result);
     setStatus(`Complete · ${result.elapsedSeconds.toFixed(2)}s`, "complete");
   } catch (error) {
@@ -133,7 +157,7 @@ function runSimulator() {
     const output = machine.encrypt(message);
     $("sim-positions").value = machine.positions;
     $("sim-output").textContent = output;
-    $("sim-status").textContent = `Encoded ${message.length} letters. Reset the windows before decoding the output.`;
+    $("sim-status").textContent = `Encoded ${message.length} letters. Use the ciphertext in the Bombe when ready.`;
   } catch (error) {
     $("sim-status").textContent = `Machine error: ${error.message}`;
   }
@@ -145,9 +169,42 @@ function resetSimulator() {
   $("sim-status").textContent = "Windows reset. The machine is ready.";
 }
 
+function useCiphertextInBombe() {
+  const ciphertext = $("sim-output").textContent;
+  const crib = $("sim-crib").value.toUpperCase().replace(/[^A-Z]/g, "");
+  if (ciphertext === "—") {
+    $("sim-status").textContent = "Encode a message first.";
+    return;
+  }
+  if (!crib || crib.length > ciphertext.length) {
+    $("sim-status").textContent = "Enter a crib that fits inside the ciphertext.";
+    return;
+  }
+  state.job = {
+    ciphertext,
+    crib,
+    cribOffset: 0,
+    rotorNames: [$("sim-rotor-left").value, $("sim-rotor-middle").value, $("sim-rotor-right").value],
+    reflector: $("sim-reflector").value,
+  };
+  renderFixture();
+  $("message-source").textContent = "FROM ENIGMA MACHINE";
+  $("sim-status").textContent = "Ciphertext loaded into the Bombe. Run the quick demonstration below.";
+  $("quick-run").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function useHistoricalExample() {
+  state.job = { ...fixture };
+  renderFixture();
+  $("message-source").textContent = "HISTORICAL EXAMPLE";
+  $("sim-status").textContent = "Historical weather-message example restored.";
+}
+
 $("quick-run").addEventListener("click", () => run("quick"));
 $("full-run").addEventListener("click", () => run("full"));
 $("sim-encode").addEventListener("click", runSimulator);
+$("use-in-bombe").addEventListener("click", useCiphertextInBombe);
 $("sim-reset").addEventListener("click", resetSimulator);
+$("historical-reset").addEventListener("click", useHistoricalExample);
 renderFixture();
 renderRelays();

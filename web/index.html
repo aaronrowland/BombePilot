@@ -20,12 +20,46 @@
         <div class="hero-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       </header>
 
+      <section class="panel simulator-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="label">ENIGMA MACHINE</p>
+            <h2>1. Create the message</h2>
+          </div>
+          <span class="chip">RECIPROCAL CIPHER</span>
+        </div>
+        <p class="explain simulator-intro">
+          Set the machine, type a plaintext message, and encode it. Then send
+          the ciphertext to the Bombe below with a guessed plaintext crib.
+        </p>
+        <div class="machine-controls">
+          <label>Left rotor<select id="sim-rotor-left"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
+          <label>Middle rotor<select id="sim-rotor-middle"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
+          <label>Right rotor<select id="sim-rotor-right"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
+          <label>Reflector<select id="sim-reflector"><option>B</option><option>C</option></select></label>
+          <label>Windows<input id="sim-positions" maxlength="3" value="AAA" spellcheck="false" /></label>
+          <label class="plugboard-field">Plugboard pairs<input id="sim-plugboard" value="AV BS" spellcheck="false" placeholder="AV BS" /></label>
+        </div>
+        <div class="simulator-workspace">
+          <label class="message-field">Plaintext message<textarea id="sim-input" rows="4" spellcheck="false">WETTERVORHERSAGEBEGINNZEHNUHRNULLNULL</textarea></label>
+          <div class="sim-output-wrap"><span class="label">CIPHERTEXT</span><div id="sim-output" class="sim-output">—</div></div>
+        </div>
+        <label class="crib-field">Crib / guessed plaintext for the Bombe<input id="sim-crib" value="WETTERVORHERSAGEBEGINNZEHNUHRNULLNULL" spellcheck="false" /></label>
+        <div class="simulator-actions">
+          <button id="sim-encode" class="button primary">Encode message</button>
+          <button id="use-in-bombe" class="button secondary">Use ciphertext in Bombe</button>
+          <button id="sim-reset" class="button secondary">Reset windows</button>
+          <span id="sim-status" class="muted">The Bombe needs a crib: a guessed piece of plaintext.</span>
+        </div>
+      </section>
+
       <section class="control-strip panel">
         <div>
-          <p class="label">RUN CONTROL</p>
+          <p class="label">BOMBE RUN CONTROL</p>
           <div class="controls">
-            <button id="quick-run" class="button primary">Run quick demonstration</button>
+            <button id="quick-run" class="button primary">2. Run Bombe on this message</button>
             <button id="full-run" class="button secondary">Run full 17,576-position sweep</button>
+            <button id="historical-reset" class="button secondary">Use historical example</button>
           </div>
         </div>
         <div class="status-block">
@@ -42,7 +76,7 @@
               <p class="label">INTERCEPTED MESSAGE</p>
               <h2>Crib alignment</h2>
             </div>
-            <span class="chip">SECRET KEY HIDDEN</span>
+            <span class="chip" id="message-source">HISTORICAL EXAMPLE</span>
           </div>
           <div class="cipher-row" id="ciphertext"></div>
           <div class="crib-row" id="crib"></div>
@@ -101,37 +135,6 @@
           <div class="check-card"><span class="label">RECOVERED SETTING</span><strong id="recovered-setting">—</strong></div>
           <div class="check-card"><span class="label">PLAINTEXT</span><strong id="decoded-message">—</strong></div>
           <div class="check-card"><span class="label">PLAIN-ENGLISH READING</span><strong id="decoded-reading">—</strong></div>
-        </div>
-      </section>
-
-      <section class="panel simulator-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="label">ENIGMA MACHINE</p>
-            <h2>Try the mechanism yourself</h2>
-          </div>
-          <span class="chip">RECIPROCAL CIPHER</span>
-        </div>
-        <p class="explain simulator-intro">
-          Set the machine, type a message, and press encode. To decode, run the
-          ciphertext again with exactly the same settings.
-        </p>
-        <div class="machine-controls">
-          <label>Left rotor<select id="sim-rotor-left"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
-          <label>Middle rotor<select id="sim-rotor-middle"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
-          <label>Right rotor<select id="sim-rotor-right"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
-          <label>Reflector<select id="sim-reflector"><option>B</option><option>C</option></select></label>
-          <label>Windows<input id="sim-positions" maxlength="3" value="AAA" spellcheck="false" /></label>
-          <label class="plugboard-field">Plugboard pairs<input id="sim-plugboard" value="AV BS" spellcheck="false" placeholder="AV BS" /></label>
-        </div>
-        <div class="simulator-workspace">
-          <label class="message-field">Message to encode / decode<textarea id="sim-input" rows="4" spellcheck="false">HELLOWORLD</textarea></label>
-          <div class="sim-output-wrap"><span class="label">OUTPUT</span><div id="sim-output" class="sim-output">—</div></div>
-        </div>
-        <div class="simulator-actions">
-          <button id="sim-encode" class="button primary">Encode message</button>
-          <button id="sim-reset" class="button secondary">Reset windows</button>
-          <span id="sim-status" class="muted">Letters and spaces are normalised to A–Z.</span>
         </div>
       </section>
 

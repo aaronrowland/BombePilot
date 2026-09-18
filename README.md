@@ -41,6 +41,10 @@ When a valid stop is found, the visualiser also runs the checking-machine
 phase and displays the recovered plaintext plus a plain-English reading of the
 German-style weather-message fixture.
 
+The web flow is now intentionally ordered as an experiment: create a message
+with the Enigma panel, use its ciphertext in the Bombe, then run the Bombe
+against the selected crib. The historical example can be restored at any time.
+
 For Cloudflare Pages, use `web` as the output directory and leave the build
 command empty. A root-level fallback is included for deployments that publish
 the repository root instead.
