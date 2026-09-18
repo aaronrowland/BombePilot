@@ -163,9 +163,9 @@ function runSimulator() {
 function decodeSimulator() {
   const positions = $("sim-positions").value.toUpperCase().replace(/[^A-Z]/g, "");
   const rotorNames = [$("sim-rotor-left").value, $("sim-rotor-middle").value, $("sim-rotor-right").value];
-  const ciphertext = state.encodedCiphertext || $("sim-output").textContent.replace(/[^A-Z]/g, "") || $("sim-input").value.toUpperCase().replace(/[^A-Z]/g, "");
+  const ciphertext = state.encodedCiphertext;
   if (positions.length !== 3 || !ciphertext) {
-    $("sim-status").textContent = "Encode a message first, or enter ciphertext to decode.";
+    $("sim-status").textContent = "Encode the current message first, then decode its output.";
     return;
   }
   try {
@@ -182,6 +182,13 @@ function resetSimulator() {
   state.encodedCiphertext = "";
   $("sim-output").textContent = "—";
   $("sim-status").textContent = "Output cleared. Enter a message to begin again.";
+}
+
+function invalidateCiphertext() {
+  if (!state.encodedCiphertext) return;
+  state.encodedCiphertext = "";
+  $("sim-output").textContent = "—";
+  $("sim-status").textContent = "Settings changed. Encode the current message again.";
 }
 
 function useCiphertextInBombe() {
@@ -214,5 +221,12 @@ $("sim-encode").addEventListener("click", runSimulator);
 $("sim-decode").addEventListener("click", decodeSimulator);
 $("use-in-bombe").addEventListener("click", useCiphertextInBombe);
 $("sim-reset").addEventListener("click", resetSimulator);
+$("sim-input").addEventListener("input", invalidateCiphertext);
+$("sim-positions").addEventListener("input", invalidateCiphertext);
+$("sim-plugboard").addEventListener("input", invalidateCiphertext);
+$("sim-rotor-left").addEventListener("change", invalidateCiphertext);
+$("sim-rotor-middle").addEventListener("change", invalidateCiphertext);
+$("sim-rotor-right").addEventListener("change", invalidateCiphertext);
+$("sim-reflector").addEventListener("change", invalidateCiphertext);
 renderFixture();
 renderRelays();
