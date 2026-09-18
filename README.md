@@ -38,12 +38,12 @@ open `web/index.html`. The hosted version provides a quick 4,096-position
 demonstration and an optional full 17,576-position sweep.
 
 When a valid stop is found, the visualiser also runs the checking-machine
-phase and displays the recovered plaintext plus a plain-English reading of the
-German-style weather-message fixture.
+phase and displays the recovered plaintext when the selected crib validates a
+candidate stop.
 
 The web flow is now intentionally ordered as an experiment: create a message
 with the Enigma panel, use its ciphertext in the Bombe, then run the Bombe
-against the selected crib. The historical example can be restored at any time.
+against the selected crib.
 
 For Cloudflare Pages, use `web` as the output directory and leave the build
 command empty. A root-level fallback is included for deployments that publish

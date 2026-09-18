@@ -11,10 +11,10 @@
       <header class="hero">
         <div>
           <p class="eyebrow">BOMBE / REFERENCE IMPLEMENTATION</p>
-          <h1>Watch a Bombe stop emerge.</h1>
+          <h1>Encode a message, then watch the Bombe work.</h1>
           <p class="lede">
-            A live visualiser for the menu, scrambler permutations, diagonal-board
-            propagation, and stop detection in BombePilot.
+            Start with your own Enigma message. Encode it, decode it again, then
+            pass its ciphertext to the Bombe to explore the key search.
           </p>
         </div>
         <div class="hero-mark" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -37,19 +37,20 @@
           <label>Middle rotor<select id="sim-rotor-middle"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
           <label>Right rotor<select id="sim-rotor-right"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
           <label>Reflector<select id="sim-reflector"><option>B</option><option>C</option></select></label>
-          <label>Windows<input id="sim-positions" maxlength="3" value="AAA" spellcheck="false" /></label>
+          <label>Starting windows<input id="sim-positions" maxlength="3" value="AAA" spellcheck="false" /></label>
           <label class="plugboard-field">Plugboard pairs<input id="sim-plugboard" value="AV BS" spellcheck="false" placeholder="AV BS" /></label>
         </div>
         <div class="simulator-workspace">
-          <label class="message-field">Plaintext message<textarea id="sim-input" rows="4" spellcheck="false">WETTERVORHERSAGEBEGINNZEHNUHRNULLNULL</textarea></label>
-          <div class="sim-output-wrap"><span class="label">CIPHERTEXT</span><div id="sim-output" class="sim-output">—</div></div>
+          <label class="message-field">Message / ciphertext<textarea id="sim-input" rows="4" spellcheck="false">HELLOWORLD</textarea></label>
+          <div class="sim-output-wrap"><span class="label">OUTPUT</span><div id="sim-output" class="sim-output">—</div></div>
         </div>
-        <label class="crib-field">Crib / guessed plaintext for the Bombe<input id="sim-crib" value="WETTERVORHERSAGEBEGINNZEHNUHRNULLNULL" spellcheck="false" /></label>
+        <label class="crib-field">Crib / guessed plaintext for the Bombe<input id="sim-crib" value="HELLOWORLD" spellcheck="false" /></label>
         <div class="simulator-actions">
           <button id="sim-encode" class="button primary">Encode message</button>
+          <button id="sim-decode" class="button secondary">Decode ciphertext</button>
           <button id="use-in-bombe" class="button secondary">Use ciphertext in Bombe</button>
-          <button id="sim-reset" class="button secondary">Reset windows</button>
-          <span id="sim-status" class="muted">The Bombe needs a crib: a guessed piece of plaintext.</span>
+          <button id="sim-reset" class="button secondary">Clear output</button>
+          <span id="sim-status" class="muted">Enter a message, encode it, then decode the output with the same settings.</span>
         </div>
       </section>
 
@@ -59,7 +60,6 @@
           <div class="controls">
             <button id="quick-run" class="button primary">2. Run Bombe on this message</button>
             <button id="full-run" class="button secondary">Run full 17,576-position sweep</button>
-            <button id="historical-reset" class="button secondary">Use historical example</button>
           </div>
         </div>
         <div class="status-block">
@@ -76,7 +76,7 @@
               <p class="label">INTERCEPTED MESSAGE</p>
               <h2>Crib alignment</h2>
             </div>
-            <span class="chip" id="message-source">HISTORICAL EXAMPLE</span>
+            <span class="chip" id="message-source">WAITING FOR CIPHERTEXT</span>
           </div>
           <div class="cipher-row" id="ciphertext"></div>
           <div class="crib-row" id="crib"></div>
