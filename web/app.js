@@ -102,10 +102,24 @@ function renderResult(result) {
       state.job.reflector || "B",
     ).encrypt(state.job.ciphertext);
     $("checker-panel").hidden = false;
+    $("checker-chip").textContent = "STOP VERIFIED";
+    $("checker-chip").className = "chip chip-success";
+    $("checker-explanation").textContent = "The checking machine found a candidate that reproduces the crib. This is the Bombe’s solved setting for the evidence supplied.";
     $("recovered-setting").textContent = `${verified.positions} · ${verified.plugboard}`;
     $("decoded-message").textContent = plaintext;
     $("decoded-reading").textContent = "The checking machine found a setting consistent with the crib.";
+    return true;
   }
+  $("checker-panel").hidden = false;
+  $("checker-chip").textContent = result.stops.length ? "NOT VERIFIED" : "NO STOP";
+  $("checker-chip").className = "chip chip-warning";
+  $("checker-explanation").textContent = result.stops.length
+    ? "The Bombe found candidate stops, but the checking machine could not validate one against the complete crib. Try a longer or more distinctive crib."
+    : "No rotor position survived the Bombe constraints. Check the crib, rotor order, reflector, and message alignment.";
+  $("recovered-setting").textContent = result.stops.length ? "Candidate stops only" : "No setting found";
+  $("decoded-message").textContent = "—";
+  $("decoded-reading").textContent = result.stops.length ? "Use a longer crib to separate the correct setting from false stops." : "Try another crib or verify the Enigma settings.";
+  return false;
 }
 
 async function run(mode) {
@@ -130,8 +144,11 @@ async function run(mode) {
   const limit = mode === "quick" ? 4096 : 17576;
   try {
     const result = await runBombe(state.job, limit, addEvent);
-    renderResult(result);
-    setStatus(`Complete · ${result.elapsedSeconds.toFixed(2)}s`, "complete");
+    const verified = renderResult(result);
+    setStatus(
+      verified ? `Verified setting found · ${result.elapsedSeconds.toFixed(2)}s` : `${result.stops.length} candidate stop${result.stops.length === 1 ? "" : "s"}; not verified`,
+      verified ? "complete" : "warning",
+    );
   } catch (error) {
     setStatus(`Error: ${error.message}`, "error");
   } finally {

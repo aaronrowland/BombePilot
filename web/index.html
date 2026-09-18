@@ -61,6 +61,7 @@
             <button id="quick-run" class="button primary">2. Run Bombe on this message</button>
             <button id="full-run" class="button secondary">Run full 17,576-position sweep</button>
           </div>
+          <p class="explain bombe-scope">The Bombe searches rotor positions and stecker hypotheses for the rotor order selected above.</p>
         </div>
         <div class="status-block">
           <span class="status-dot" id="status-dot"></span>
@@ -124,9 +125,9 @@
             <p class="label">CHECKING MACHINE</p>
             <h2>Verify the Bombe stop</h2>
           </div>
-          <span class="chip chip-success">STOP VERIFIED</span>
+          <span class="chip" id="checker-chip">WAITING</span>
         </div>
-        <p class="explain checker-intro">
+        <p class="explain checker-intro" id="checker-explanation">
           A Bombe stop is a promising setting, not a finished decryption. The
           checking machine applies the recovered rotor position and partial
           stecker to the full message.
