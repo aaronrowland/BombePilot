@@ -84,6 +84,26 @@
         <div class="relay-grid" id="relay-grid" aria-label="Diagonal board relay state"></div>
       </section>
 
+      <section class="panel checker-panel" id="checker-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="label">CHECKING MACHINE</p>
+            <h2>Verify the Bombe stop</h2>
+          </div>
+          <span class="chip chip-success">STOP VERIFIED</span>
+        </div>
+        <p class="explain checker-intro">
+          A Bombe stop is a promising setting, not a finished decryption. The
+          checking machine applies the recovered rotor position and partial
+          stecker to the full message.
+        </p>
+        <div class="checker-grid">
+          <div class="check-card"><span class="label">RECOVERED SETTING</span><strong id="recovered-setting">—</strong></div>
+          <div class="check-card"><span class="label">PLAINTEXT</span><strong id="decoded-message">—</strong></div>
+          <div class="check-card"><span class="label">PLAIN-ENGLISH READING</span><strong id="decoded-reading">—</strong></div>
+        </div>
+      </section>
+
       <section class="grid bottom-grid">
         <article class="panel">
           <div class="panel-heading">

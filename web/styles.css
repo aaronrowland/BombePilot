@@ -60,6 +60,13 @@ h2 { font-size: 1.08rem; letter-spacing: -.02em; margin-bottom: 0; }
 .edge small { font-size: 10px; }
 .explain { font-size: 12px; margin: 15px 0 0; }
 .scan-panel { padding-bottom: 18px; }
+.checker-panel { margin-top: 18px; border-color: rgba(102, 225, 208, .48); }
+.chip-success { color: var(--cyan); border-color: rgba(102, 225, 208, .45); }
+.checker-intro { max-width: 760px; margin-top: -8px; }
+.checker-grid { display: grid; grid-template-columns: .7fr 1.5fr 1fr; gap: 10px; margin-top: 20px; }
+.check-card { min-height: 88px; background: #08151b; border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.check-card strong { display: block; color: var(--cyan); font: 700 1.05rem/1.35 "SFMono-Regular", Consolas, monospace; margin-top: 8px; }
+.check-card:last-child strong { font-family: inherit; }
 .scan-count { color: var(--muted); font-size: 12px; }
 .scan-count strong { color: var(--text); font-size: 1.4rem; }
 .rotor-bank { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -92,6 +99,7 @@ footer { display: flex; justify-content: space-between; gap: 20px; color: var(--
   .hero, .control-strip { align-items: flex-start; flex-direction: column; }
   .hero-mark { display: none; }
   .top-grid, .bottom-grid { grid-template-columns: 1fr; }
+  .checker-grid { grid-template-columns: 1fr; }
   .relay-grid { grid-template-columns: repeat(13, 1fr); }
   footer { flex-direction: column; }
 }

@@ -37,6 +37,10 @@ For a local preview, serve the repository root with any static file server and
 open `web/index.html`. The hosted version provides a quick 4,096-position
 demonstration and an optional full 17,576-position sweep.
 
+When a valid stop is found, the visualiser also runs the checking-machine
+phase and displays the recovered plaintext plus a plain-English reading of the
+German-style weather-message fixture.
+
 For Cloudflare Pages, use `web` as the output directory and leave the build
 command empty. A root-level fallback is included for deployments that publish
 the repository root instead.

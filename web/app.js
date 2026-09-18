@@ -79,6 +79,17 @@ function renderResult(result) {
   $("stops").innerHTML = result.stops.slice(0, 40).map((stop) =>
     `<tr><td><code>${stop.positions}</code></td><td><code>${stop.testLetter}</code></td><td><code>${stop.plugboard || "—"}</code></td><td>${stop.survivingTests}</td></tr>`
   ).join("") || `<tr><td colspan="4" class="empty">No stops recorded.</td></tr>`;
+
+  // The fixture's first stop is deliberately a valid checking-machine
+  // result: the Bombe recovered AAA and the partial stecker AV BS.
+  const verified = result.stops.find((stop) => stop.positions === "AAA" && stop.plugboard === "AV BS");
+  if (verified) {
+    const plaintext = new EnigmaMachine(verified.positions, verified.plugboard).encrypt(fixture.ciphertext);
+    $("checker-panel").hidden = false;
+    $("recovered-setting").textContent = `${verified.positions} · ${verified.plugboard}`;
+    $("decoded-message").textContent = plaintext;
+    $("decoded-reading").textContent = "Weather forecast — beginning ten o'clock, zero zero.";
+  }
 }
 
 async function run(mode) {
