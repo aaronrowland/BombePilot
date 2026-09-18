@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BombePilot — Turing–Welchman visualiser</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">BOMBE / REFERENCE IMPLEMENTATION</p>
+          <h1>Watch a Bombe stop emerge.</h1>
+          <p class="lede">
+            A live visualiser for the menu, scrambler permutations, diagonal-board
+            propagation, and stop detection in BombePilot.
+          </p>
+        </div>
+        <div class="hero-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      </header>
+
+      <section class="control-strip panel">
+        <div>
+          <p class="label">RUN CONTROL</p>
+          <div class="controls">
+            <button id="quick-run" class="button primary">Run quick demonstration</button>
+            <button id="full-run" class="button secondary">Run full 17,576-position sweep</button>
+          </div>
+        </div>
+        <div class="status-block">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status">Ready</span>
+          <span class="muted" id="run-mode"></span>
+        </div>
+      </section>
+
+      <section class="grid top-grid">
+        <article class="panel panel-accent">
+          <div class="panel-heading">
+            <div>
+              <p class="label">INTERCEPTED MESSAGE</p>
+              <h2>Crib alignment</h2>
+            </div>
+            <span class="chip">SECRET KEY HIDDEN</span>
+          </div>
+          <div class="cipher-row" id="ciphertext"></div>
+          <div class="crib-row" id="crib"></div>
+          <div class="legend"><span class="line-key"></span> crib → ciphertext relationship</div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">MENU</p>
+              <h2>Connected web</h2>
+            </div>
+            <span class="metric" id="menu-root">—</span>
+          </div>
+          <div class="menu-edges" id="menu-edges"></div>
+          <p class="explain">The most connected letter becomes the test point. Repeated letters create the constraints that make the menu useful.</p>
+        </article>
+      </section>
+
+      <section class="panel scan-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="label">BOMBE RUN</p>
+            <h2>Rotor bank scanning</h2>
+          </div>
+          <div class="scan-count"><strong id="positions-tested">0</strong><span>/ 17,576 positions</span></div>
+        </div>
+        <div class="rotor-bank">
+          <div class="rotor"><span class="rotor-name">LEFT</span><strong id="rotor-left">A</strong><small>slow drum</small></div>
+          <div class="rotor"><span class="rotor-name">MIDDLE</span><strong id="rotor-middle">A</strong><small>middle drum</small></div>
+          <div class="rotor rotor-hot"><span class="rotor-name">RIGHT</span><strong id="rotor-right">A</strong><small>fast drum</small></div>
+        </div>
+        <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+        <div class="scan-meta">
+          <span>Hypotheses tested: <strong id="hypotheses-tested">0</strong></span>
+          <span>Latest test: <strong id="latest-test">—</strong></span>
+          <span>Diagonal board: <strong id="relay-state">waiting</strong></span>
+        </div>
+        <div class="relay-grid" id="relay-grid" aria-label="Diagonal board relay state"></div>
+      </section>
+
+      <section class="grid bottom-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">STOP REGISTER</p>
+              <h2>Candidate settings</h2>
+            </div>
+            <span class="metric" id="stop-count">0</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Rotor position</th><th>Test stecker</th><th>Inferred pairs</th><th>Survivors</th></tr></thead>
+              <tbody id="stops"><tr><td colspan="4" class="empty">No stops yet.</td></tr></tbody>
+            </table>
+          </div>
+          <p class="explain">A stop is not automatically the answer. It is passed to a checking machine, where the partial stecker is validated against the full message.</p>
+        </article>
+
+        <article class="panel log-panel">
+          <div class="panel-heading"><div><p class="label">RELAY LOG</p><h2>Machine trace</h2></div></div>
+          <div id="event-log" class="event-log"><div class="log-line muted">Waiting for a run…</div></div>
+        </article>
+      </section>
+
+      <footer>
+        <span>BombePilot · deterministic core, observable execution</span>
+        <span>AI can explain the run; the solver proves the result.</span>
+      </footer>
+    </main>
+    <script src="solver.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

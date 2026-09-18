@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bombepilot"
+version = "0.1.0"
+description = "A deterministic, observable Bombe-inspired constraint solver."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Aaron Rowland"}]
+
+[project.scripts]
+bombepilot = "bombepilot.cli:main"
+bombepilot-web = "bombepilot.web:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
