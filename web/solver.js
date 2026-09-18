@@ -6,8 +6,13 @@ const ROTOR_SPECS = {
   I: ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q"],
   II: ["AJDKSIRUXBLHWTMCQGZNPYFVOE", "E"],
   III: ["BDFHJLCPRTXVZNYEIWGAKMUSQO", "V"],
+  IV: ["ESOVPZJAYQUIRHXLNFTGKDCMWB", "J"],
+  V: ["VZBRGITYUPSDNHLXAWMJQOFECK", "Z"],
 };
-const REFLECTOR_B = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
+const REFLECTORS = {
+  B: "YRUHQSLDPXNGOKMIEBFZCWVJAT",
+  C: "FVPJIAOYEDRZXWGCTKUQSBNMHL",
+};
 const indexOf = (letter) => letter.charCodeAt(0) - 65;
 
 function plugboard(pairs) {
@@ -41,14 +46,16 @@ class Rotor {
 }
 
 class EnigmaMachine {
-  constructor(positions = "AAA", pairs = "") {
+  constructor(positions = "AAA", pairs = "", rotorNames = ["I", "II", "III"], reflector = "B") {
     this.rotors = [
-      new Rotor("I", indexOf(positions[0])),
-      new Rotor("II", indexOf(positions[1])),
-      new Rotor("III", indexOf(positions[2])),
+      new Rotor(rotorNames[0], indexOf(positions[0])),
+      new Rotor(rotorNames[1], indexOf(positions[1])),
+      new Rotor(rotorNames[2], indexOf(positions[2])),
     ];
     this.plugboard = plugboard(pairs);
+    this.reflector = REFLECTORS[reflector] || REFLECTORS.B;
   }
+  get positions() { return this.rotors.map((rotor) => ALPHABET[rotor.position]).join(""); }
   step() {
     const [left, middle, right] = this.rotors;
     const middleAtNotch = middle.atNotch();
@@ -60,7 +67,7 @@ class EnigmaMachine {
   transformCore(letter) {
     let value = indexOf(letter);
     for (const rotor of [...this.rotors].reverse()) value = rotor.forward(value);
-    value = indexOf(REFLECTOR_B[value]);
+    value = indexOf(this.reflector[value]);
     for (const rotor of this.rotors) value = rotor.reverse(value);
     return ALPHABET[value];
   }

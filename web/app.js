@@ -120,7 +120,34 @@ async function run(mode) {
   }
 }
 
+function runSimulator() {
+  const positions = $("sim-positions").value.toUpperCase().replace(/[^A-Z]/g, "");
+  const rotorNames = [$("sim-rotor-left").value, $("sim-rotor-middle").value, $("sim-rotor-right").value];
+  const message = $("sim-input").value.toUpperCase().replace(/[^A-Z]/g, "");
+  if (positions.length !== 3 || message.length === 0) {
+    $("sim-status").textContent = "Enter three window letters and at least one message letter.";
+    return;
+  }
+  try {
+    const machine = new EnigmaMachine(positions, $("sim-plugboard").value.toUpperCase(), rotorNames, $("sim-reflector").value);
+    const output = machine.encrypt(message);
+    $("sim-positions").value = machine.positions;
+    $("sim-output").textContent = output;
+    $("sim-status").textContent = `Encoded ${message.length} letters. Reset the windows before decoding the output.`;
+  } catch (error) {
+    $("sim-status").textContent = `Machine error: ${error.message}`;
+  }
+}
+
+function resetSimulator() {
+  $("sim-positions").value = "AAA";
+  $("sim-output").textContent = "—";
+  $("sim-status").textContent = "Windows reset. The machine is ready.";
+}
+
 $("quick-run").addEventListener("click", () => run("quick"));
 $("full-run").addEventListener("click", () => run("full"));
+$("sim-encode").addEventListener("click", runSimulator);
+$("sim-reset").addEventListener("click", resetSimulator);
 renderFixture();
 renderRelays();

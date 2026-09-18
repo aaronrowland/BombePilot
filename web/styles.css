@@ -67,6 +67,18 @@ h2 { font-size: 1.08rem; letter-spacing: -.02em; margin-bottom: 0; }
 .check-card { min-height: 88px; background: #08151b; border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
 .check-card strong { display: block; color: var(--cyan); font: 700 1.05rem/1.35 "SFMono-Regular", Consolas, monospace; margin-top: 8px; }
 .check-card:last-child strong { font-family: inherit; }
+.simulator-panel { margin-top: 18px; }
+.simulator-intro { max-width: 760px; margin-top: -8px; }
+.machine-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; margin-top: 20px; }
+.machine-controls label, .message-field { color: var(--muted); display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.machine-controls input, .machine-controls select, .message-field textarea { background: #071217; border: 1px solid var(--line); border-radius: 6px; color: var(--text); font: 700 14px "SFMono-Regular", Consolas, monospace; padding: 9px 10px; }
+.machine-controls input:focus, .machine-controls select:focus, .message-field textarea:focus { border-color: var(--cyan); outline: none; }
+.plugboard-field { grid-column: span 2; }
+.simulator-workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.message-field textarea { min-height: 96px; resize: vertical; font-weight: 500; line-height: 1.5; }
+.sim-output-wrap { background: #071217; border: 1px solid var(--line); border-radius: 7px; padding: 13px; }
+.sim-output { color: var(--cyan); font: 700 1.15rem/1.6 "SFMono-Regular", Consolas, monospace; min-height: 75px; overflow-wrap: anywhere; letter-spacing: .08em; }
+.simulator-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
 .scan-count { color: var(--muted); font-size: 12px; }
 .scan-count strong { color: var(--text); font-size: 1.4rem; }
 .rotor-bank { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -100,6 +112,8 @@ footer { display: flex; justify-content: space-between; gap: 20px; color: var(--
   .hero-mark { display: none; }
   .top-grid, .bottom-grid { grid-template-columns: 1fr; }
   .checker-grid { grid-template-columns: 1fr; }
+  .machine-controls, .simulator-workspace { grid-template-columns: 1fr; }
+  .plugboard-field { grid-column: auto; }
   .relay-grid { grid-template-columns: repeat(13, 1fr); }
   footer { flex-direction: column; }
 }

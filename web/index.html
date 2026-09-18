@@ -104,6 +104,37 @@
         </div>
       </section>
 
+      <section class="panel simulator-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="label">ENIGMA MACHINE</p>
+            <h2>Try the mechanism yourself</h2>
+          </div>
+          <span class="chip">RECIPROCAL CIPHER</span>
+        </div>
+        <p class="explain simulator-intro">
+          Set the machine, type a message, and press encode. To decode, run the
+          ciphertext again with exactly the same settings.
+        </p>
+        <div class="machine-controls">
+          <label>Left rotor<select id="sim-rotor-left"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
+          <label>Middle rotor<select id="sim-rotor-middle"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
+          <label>Right rotor<select id="sim-rotor-right"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select></label>
+          <label>Reflector<select id="sim-reflector"><option>B</option><option>C</option></select></label>
+          <label>Windows<input id="sim-positions" maxlength="3" value="AAA" spellcheck="false" /></label>
+          <label class="plugboard-field">Plugboard pairs<input id="sim-plugboard" value="AV BS" spellcheck="false" placeholder="AV BS" /></label>
+        </div>
+        <div class="simulator-workspace">
+          <label class="message-field">Message to encode / decode<textarea id="sim-input" rows="4" spellcheck="false">HELLOWORLD</textarea></label>
+          <div class="sim-output-wrap"><span class="label">OUTPUT</span><div id="sim-output" class="sim-output">—</div></div>
+        </div>
+        <div class="simulator-actions">
+          <button id="sim-encode" class="button primary">Encode message</button>
+          <button id="sim-reset" class="button secondary">Reset windows</button>
+          <span id="sim-status" class="muted">Letters and spaces are normalised to A–Z.</span>
+        </div>
+      </section>
+
       <section class="grid bottom-grid">
         <article class="panel">
           <div class="panel-heading">
